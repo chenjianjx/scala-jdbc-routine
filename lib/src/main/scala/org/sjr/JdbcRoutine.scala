@@ -100,9 +100,8 @@ class JdbcRoutine {
     Using.resource(conn.prepareCall(sql)) { stmt =>
       setParamsForCall(params, stmt)
       stmt.execute()
-      val updateCount = stmt.getUpdateCount
       val outValues = getOutValuesAfterCall(stmt, params)
-      CallToUpdateResult(updateCount, outValues)
+      CallToUpdateResult(outValues)
     }
   }
 

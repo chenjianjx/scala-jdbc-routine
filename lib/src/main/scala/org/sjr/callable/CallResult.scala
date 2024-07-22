@@ -16,13 +16,7 @@ case class CallForDataResult[T](
                                  outValues: Map[Int, Any])
 
 
-case class CallToUpdateResult(
-                               /**
-                                * the return result of underlying [[java.sql.Statement#getUpdateCount(String)]]
-                                */
-                               updateCount: Int,
-
-                               /**
+case class CallToUpdateResult(/**
                                 * @see [[CallForDataResult]]
                                 */
                                outValues: Map[Int, Any])

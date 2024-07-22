@@ -1,6 +1,7 @@
 package org.sjr
 
 import java.io.{BufferedReader, InputStream, Reader}
+import java.sql
 import scala.io.Source
 import scala.util.Using
 
@@ -20,4 +21,9 @@ package object testutil {
     Using.resource(new BufferedReader(reader)) { br => LazyList.continually(br.readLine()).takeWhile(_ != null).mkString }
   }
 
+
+  /*******************SQL tools ************ */
+  def sqlArrayToSeq[T](sqlArray: sql.Array): Seq[T] = {
+    sqlArray.getArray.asInstanceOf[Array[T]].toSeq
+  }
 }
