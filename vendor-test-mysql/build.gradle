@@ -1,0 +1,4 @@
+dependencies {
+    testRuntimeOnly libs.mysql.connector.java
+    testImplementation libs.testcontainers.mysql
+}

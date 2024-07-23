@@ -14,11 +14,15 @@
     * executeCallable -- done
     * support Blob & Clob and other getXxx() methods -- done
 * Add transaction support -- done
-* Refactor - change names and re-org test cases
+* Refactor - change names and re-org test cases  -- done
 * Add quality control
-    * separate test cases
-    * test coverage --50%
-    * code style -- don't optimize import as `._`
+    * code style -- don't optimize import as `._` -- done
+    * add more scala compile options -- done
+* vendor test cases
+  * mysql --done
+  * pg --done
+  * oracle 
+  * ms-sql 
 * Make it output libraries for multiple scala versions
 * Publish the snapshot version
 * Delete this file and publish the real version

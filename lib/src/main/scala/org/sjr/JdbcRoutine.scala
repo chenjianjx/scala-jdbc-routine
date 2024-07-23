@@ -1,8 +1,8 @@
 package org.sjr
 
-import org.sjr.callable._
+import org.sjr.callable.{CallForDataResult, CallToUpdateResult, CallableStatementParam, InOutParam, InParam, OutParam}
 
-import java.sql._
+import java.sql.{CallableStatement, Connection, PreparedStatement, ResultSet, SQLException, Statement}
 import scala.collection.mutable.ArrayBuffer
 import scala.util.Using
 

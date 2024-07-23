@@ -3,7 +3,8 @@ package org.sjr
 import java.io.{InputStream, Reader}
 import java.net.URL
 import java.sql
-import java.sql._
+import java.sql.{Blob, Clob, Date, NClob, ResultSet, SQLNonTransientException, SQLXML, Time, Timestamp}
+
 
 /**
  * The retrieval methods in vanilla ResultSet can return nulls, which is frowned upon in Scala.
@@ -36,9 +37,9 @@ class WrappedResultSet(private val delegate: ResultSet) {
 
   def getBigDecimal(columnLabel: String): scala.math.BigDecimal = getOrThrow(columnLabel, getBigDecimalOpt(columnLabel))
 
-  def getBigDecimalOpt(columnIndex: Int): Option[scala.math.BigDecimal] = Option(delegate.getBigDecimal(columnIndex))
+  def getBigDecimalOpt(columnIndex: Int): Option[scala.math.BigDecimal] = Option(delegate.getBigDecimal(columnIndex)).map(BigDecimal(_))
 
-  def getBigDecimalOpt(columnLabel: String): Option[scala.math.BigDecimal] = Option(delegate.getBigDecimal(columnLabel))
+  def getBigDecimalOpt(columnLabel: String): Option[scala.math.BigDecimal] = Option(delegate.getBigDecimal(columnLabel)).map(BigDecimal(_))
 
   def getBinaryStream(columnIndex: Int): InputStream = getOrThrow(columnIndex, getBinaryStreamOpt(columnIndex))
 
