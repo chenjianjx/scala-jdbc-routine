@@ -1,15 +1,11 @@
 [versions]
 junit = "5.8.2"
-mockito = "4.8.0"
 scala-library = "2.13.11"
 commons-dbutils = "1.8.1"
-h2 = "2.1.214" #todo: remove it
 testcontainers = "1.17.6"
 mysql-connector-java = "8.0.29"
 postgresql = "42.7.3"
 slf4j = "1.7.36"
-logback = "1.2.11"
-scoverage = "8.1"
 
 [libraries]
 
@@ -19,16 +15,11 @@ scala-reflect = { module = "org.scala-lang:scala-reflect", version.ref = "scala-
 #test libs
 junit-api = { module = "org.junit.jupiter:junit-jupiter-api", version.ref = "junit" }
 junit-engine = { module = "org.junit.jupiter:junit-jupiter-engine", version.ref = "junit" }
-mockito-core = { module = "org.mockito:mockito-core", version.ref = "mockito" }
-mockito-junit-jupiter = { module = "org.mockito:mockito-junit-jupiter", version.ref = "mockito" }
 commons-dbutils = { module = "commons-dbutils:commons-dbutils", version.ref = "commons-dbutils" }
-h2 = { module = "com.h2database:h2", version.ref = "h2" }  #todo: remove it
+testcontainers-jdbc = { module = "org.testcontainers:jdbc", version.ref = "testcontainers" }
 testcontainers-mysql = { module = "org.testcontainers:mysql", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 mysql-connector-java = { module = "mysql:mysql-connector-java", version.ref = "mysql-connector-java" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
-logback-classic = { module = "ch.qos.logback:logback-classic", version.ref = "logback" }
-
-[plugins]
-scoverage = { id = "org.scoverage", version.ref = "scoverage" }
+slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }

@@ -1,0 +1,8 @@
+dependencies {
+    api(project(":lib"))
+
+    api libs.scala.reflect
+    api libs.junit.api
+    api libs.commons.dbutils
+    api libs.testcontainers.jdbc
+}
