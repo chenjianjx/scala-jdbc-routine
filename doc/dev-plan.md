@@ -23,6 +23,9 @@
   * pg --done
   * oracle 
   * ms-sql 
+* Things to revise
+  * Instead of stringAsXxxStream in the crud test case class,  use File to simulate real life? 
+  * blob/xml/etc for some databases
 * Make it output libraries for multiple scala versions
 * Publish the snapshot version
 * Delete this file and publish the real version

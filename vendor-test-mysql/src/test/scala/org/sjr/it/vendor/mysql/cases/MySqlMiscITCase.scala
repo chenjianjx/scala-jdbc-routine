@@ -15,14 +15,15 @@ class MySqlMiscITCase extends MiscITCase {
 
   override protected def nameOfTableWithAutoKey: String = "auto_key_record"
 
-  override protected def ddlOfTableWithAutoKey: String =
+  override protected def ddlOfTableWithAutoKey: Seq[String] = Seq(
     """
       |CREATE TABLE auto_key_record (
       |  id BIGINT AUTO_INCREMENT PRIMARY KEY,
       |  int_value INT NOT NULL
       |  )
-      """.stripMargin
+      """.stripMargin)
 
+  override protected def insertIntoTableWithAutoKey: String = s"insert into $nameOfTableWithAutoKey(int_value) values(?)"
 
   override protected def generatedKeysHandler: GeneratedKeysHandler[Long] = new MySqlGeneratedKeysHandler
 
@@ -35,7 +36,7 @@ class MySqlMiscITCase extends MiscITCase {
   }
 
   @Test
-  def complimentTestCoverage(): Unit = {
+  def complimentTestCoverage_getArray(): Unit = {
 
     withConn { implicit conn =>
 
@@ -49,4 +50,15 @@ class MySqlMiscITCase extends MiscITCase {
     }
 
   }
+
+  @Test
+  def complimentTestCoverage_getAutoKeyFromReturnedColumns(): Unit = {
+
+    withConn { implicit conn =>
+      jdbcRoutine.updateAndGetGeneratedKeysFromReturnedColumns[Long](insertIntoTableWithAutoKey, Array("whatever"), generatedKeysHandler, -1)
+      ()
+    }
+
+  }
+
 }

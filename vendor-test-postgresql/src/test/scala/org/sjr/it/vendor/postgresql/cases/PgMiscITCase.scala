@@ -15,14 +15,15 @@ class PgMiscITCase extends MiscITCase {
 
   override protected def nameOfTableWithAutoKey: String = "auto_key_record"
 
-  override protected def ddlOfTableWithAutoKey: String =
+  override protected def ddlOfTableWithAutoKey: Seq[String] = Seq(
     """
       |CREATE TABLE auto_key_record (
       |  id BIGSERIAL PRIMARY KEY,
       |  int_value INT NOT NULL
       |  )
-      """.stripMargin
+      """.stripMargin)
 
+  override protected def insertIntoTableWithAutoKey: String = s"insert into $nameOfTableWithAutoKey(int_value) values(?)"
 
   override protected def generatedKeysHandler: GeneratedKeysHandler[Long] = new PgGeneratedKeysHandler
 
@@ -36,7 +37,7 @@ class PgMiscITCase extends MiscITCase {
 
 
   @Test
-  def complimentTestCoverage(): Unit = {
+  def complimentTestCoverage_unsupportedTypes(): Unit = {
 
     withConn { implicit conn =>
 
@@ -70,4 +71,15 @@ class PgMiscITCase extends MiscITCase {
     }
 
   }
+
+  @Test
+  def complimentTestCoverage_getAutoKeyFromReturnedColumns(): Unit = {
+
+    withConn { implicit conn =>
+      jdbcRoutine.updateAndGetGeneratedKeysFromReturnedColumns[Long](insertIntoTableWithAutoKey, Array("id"), generatedKeysHandler, 123)
+      ()
+    }
+
+  }
+
 }

@@ -1,0 +1,4 @@
+dependencies {
+    implementation libs.testcontainers.oracle.free
+    testRuntimeOnly libs.ojdbc
+}
