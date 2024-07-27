@@ -15,7 +15,7 @@ package object support {
   }
 
   def testJdbc: QueryRunner = {
-    new QueryRunner()
+    new QueryRunner(true)
   }
 
 

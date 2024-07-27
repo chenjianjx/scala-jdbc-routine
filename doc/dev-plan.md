@@ -21,7 +21,7 @@
 * vendor test cases
   * mysql --done
   * pg --done
-  * oracle 
+  * oracle --done (with some types unsupported)
   * ms-sql 
 * Things to revise
   * Instead of stringAsXxxStream in the crud test case class,  use File to simulate real life? 
@@ -34,6 +34,7 @@
 ----
 
 # Design
+
 
 ## for callable statements
 

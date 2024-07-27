@@ -14,7 +14,7 @@ package object testutil {
   }
 
   def toByteSeq(input: InputStream): Seq[Byte] = {
-    Using.resource(input) { input => LazyList.continually(input.read).takeWhile(_ != -1).map(_.toByte) }
+    Using.resource(input) { input => LazyList.continually(input.read).takeWhile(_ != -1).map(_.toByte).toList }
   }
 
   def readerToString(reader: Reader): String = {
