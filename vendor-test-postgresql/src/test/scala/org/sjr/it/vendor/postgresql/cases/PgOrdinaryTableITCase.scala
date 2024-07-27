@@ -1,15 +1,18 @@
 package org.sjr.it.vendor.postgresql.cases
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Test
+import org.sjr.TransactionRoutine.transaction
 import org.sjr.it.vendor.common.cases.{AllTypesRecord, OrdinaryTableITCase}
 import org.sjr.it.vendor.common.support
-import org.sjr.it.vendor.common.support.TestContainerConnFactory
+import org.sjr.it.vendor.common.support.{TestContainerConnFactory, testJdbc, withConn}
 import org.sjr.it.vendor.postgresql.cases
 import org.sjr.it.vendor.postgresql.support.createPgContainer
-import org.sjr.testutil.{readerToString, sqlArrayToSeq, toByteSeq, toUtf8String}
-import org.sjr.{RowHandler, WrappedResultSet}
+import org.sjr.testutil.{blobToByteSeq, readerToString, sqlArrayToSeq, streamToByteSeq, toSQLXML, toUtf8String}
+import org.sjr.{PreparedStatementSetterParam, RowHandler, WrappedResultSet}
 
-import java.sql.SQLXML
+import java.io.ByteArrayInputStream
+import java.sql.{Connection, PreparedStatement, SQLXML}
 import java.util.concurrent.atomic.AtomicInteger
 import java.{sql, util}
 
@@ -57,6 +60,13 @@ case class PgAllTypesRecord(
   override def makeCopy(string: String): PgAllTypesRecord = this.copy(string = string)
 }
 
+case class PgLargeColumnRecord(id: Long,
+                               byteSeqFromBlob: Seq[Byte],
+                               byteSeqFromBlobOpt: Option[Seq[Byte]])
+
+class PgSetBytesAsBlobParam(bytes: Array[Byte]) extends PreparedStatementSetterParam {
+  override def doSet(stmt: PreparedStatement, index: Int): Unit = stmt.setBlob(index, new ByteArrayInputStream(bytes), bytes.length.toLong)
+}
 
 class PgOrdinaryTableITCase extends OrdinaryTableITCase[PgAllTypesRecord] {
 
@@ -70,7 +80,7 @@ class PgOrdinaryTableITCase extends OrdinaryTableITCase[PgAllTypesRecord] {
 
   override protected def stringOptColumnName: String = "string_opt"
 
-  override protected def ddlForTable: String =
+  override protected def ddlsForTable: Seq[String] = Seq(
     """
       |CREATE TABLE all_types_record (
       |  id BIGINT PRIMARY KEY,
@@ -110,6 +120,20 @@ class PgOrdinaryTableITCase extends OrdinaryTableITCase[PgAllTypesRecord] {
       |  time_opt TIME,
       |  timestamp_value TIMESTAMP NOT NULL,
       |  timestamp_opt TIMESTAMP
+      |)
+      |""".stripMargin)
+
+  /**
+   * Large object insertion in postgres requires transaction.  So separate them
+   *
+   * @return
+   */
+  private def ddlForLargeColumnTable: String =
+    """
+      |CREATE TABLE large_column_record (
+      |  id BIGINT PRIMARY KEY,
+      |  byte_seq_from_blob OID NOT NULL,
+      |  byte_seq_from_blob_opt OID
       |)
       |""".stripMargin
 
@@ -155,16 +179,14 @@ class PgOrdinaryTableITCase extends OrdinaryTableITCase[PgAllTypesRecord] {
       |    timestamp_value,
       |    timestamp_opt
       |) VALUES (
-      |    ?,
-      |    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, XML(?), XML(?), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      |    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,  ?, ?, ?, ?, ?, ?, ?
       |);
       |""".stripMargin
 
 
   override def recordWithTotalFields = PgAllTypesRecord(
     id = 111L,
-
-    array = Seq[Int](1,2,3),
+    array = Seq[Int](1, 2, 3),
     arrayOpt = Some(Seq[Int](4, 5, 6)),
     bigDecimal = BigDecimal("123.45"),
     bigDecimalOpt = Some(BigDecimal("678.90")),
@@ -194,8 +216,8 @@ class PgOrdinaryTableITCase extends OrdinaryTableITCase[PgAllTypesRecord] {
     stringFromAsciiStreamOpt = Some("def"),
     stringFromCharacterStream = "aabbcc",
     stringFromCharacterStreamOpt = Some("ddeeff"),
-    stringOpt = Some("stringOpt"),
     string = "string",
+    stringOpt = Some("stringOpt"),
     time = java.sql.Time.valueOf("12:34:56"),
     timeOpt = Some(java.sql.Time.valueOf("01:23:45")),
     timestamp = java.sql.Timestamp.valueOf("2024-01-01 12:34:56"),
@@ -205,7 +227,7 @@ class PgOrdinaryTableITCase extends OrdinaryTableITCase[PgAllTypesRecord] {
   override def recordWithRequiredFields = PgAllTypesRecord(
     id = 222L,
 
-    array = Seq[Int](1,2,3),
+    array = Seq[Int](1, 2, 3),
     arrayOpt = None,
     bigDecimal = BigDecimal("123.45"),
     bigDecimalOpt = None,
@@ -262,8 +284,8 @@ class PgOrdinaryTableITCase extends OrdinaryTableITCase[PgAllTypesRecord] {
       booleanOpt = rs.getScalaBooleanOpt("BOOLEAN_OPT"),
       byte = rs.getScalaByte("BYTE_VALUE"),
       byteOpt = rs.getScalaByteOpt("BYTE_OPT"),
-      byteSeqFromBinaryStream = toByteSeq(rs.getBinaryStream("BYTE_SEQ_FROM_BINARY_STREAM")),
-      byteSeqFromBinaryStreamOpt = rs.getBinaryStreamOpt("BYTE_SEQ_FROM_BINARY_STREAM_OPT").map(toByteSeq),
+      byteSeqFromBinaryStream = streamToByteSeq(rs.getBinaryStream("BYTE_SEQ_FROM_BINARY_STREAM")),
+      byteSeqFromBinaryStreamOpt = rs.getBinaryStreamOpt("BYTE_SEQ_FROM_BINARY_STREAM_OPT").map(streamToByteSeq),
       byteSeqFromBytes = rs.getBytes("BYTE_SEQ_FROM_BYTES").toSeq,
       byteSeqFromBytesOpt = rs.getBytesOpt("BYTE_SEQ_FROM_BYTES_OPT").map(_.toSeq),
       date = rs.getDate("DATE_VALUE"),
@@ -308,8 +330,8 @@ class PgOrdinaryTableITCase extends OrdinaryTableITCase[PgAllTypesRecord] {
         booleanOpt = rs.getScalaBooleanOpt(i.getAndIncrement),
         byte = rs.getScalaByte(i.getAndIncrement),
         byteOpt = rs.getScalaByteOpt(i.getAndIncrement),
-        byteSeqFromBinaryStream = toByteSeq(rs.getBinaryStream(i.getAndIncrement)),
-        byteSeqFromBinaryStreamOpt = rs.getBinaryStreamOpt(i.getAndIncrement).map(toByteSeq),
+        byteSeqFromBinaryStream = streamToByteSeq(rs.getBinaryStream(i.getAndIncrement)),
+        byteSeqFromBinaryStreamOpt = rs.getBinaryStreamOpt(i.getAndIncrement).map(streamToByteSeq),
         byteSeqFromBytes = rs.getBytes(i.getAndIncrement).toSeq,
         byteSeqFromBytesOpt = rs.getBytesOpt(i.getAndIncrement).map(_.toSeq),
         date = rs.getDate(i.getAndIncrement),
@@ -339,6 +361,30 @@ class PgOrdinaryTableITCase extends OrdinaryTableITCase[PgAllTypesRecord] {
       )
     }
   }
+
+  private class PgLargeColumnRecordRowHandler extends RowHandler[PgLargeColumnRecord] {
+
+    override def handle(rs: WrappedResultSet): PgLargeColumnRecord = {
+      PgLargeColumnRecord(
+        id = rs.getScalaLong("ID"),
+        byteSeqFromBlob = blobToByteSeq(rs.getBlob("BYTE_SEQ_FROM_BLOB")),
+        byteSeqFromBlobOpt = rs.getBlobOpt("BYTE_SEQ_FROM_BLOB_OPT").map(blob => blobToByteSeq(blob))
+      )
+    }
+  }
+
+  private class PgLargeColumnRecordByIndexRowHandler extends RowHandler[PgLargeColumnRecord] {
+
+    override def handle(rs: WrappedResultSet): PgLargeColumnRecord = {
+      val i = new AtomicInteger(1)
+      PgLargeColumnRecord(
+        id = rs.getScalaLong(i.getAndIncrement()),
+        byteSeqFromBlob = blobToByteSeq(rs.getBlob(i.getAndIncrement())),
+        byteSeqFromBlobOpt = rs.getBlobOpt(i.getAndIncrement()).map(blob => blobToByteSeq(blob))
+      )
+    }
+  }
+
 
   override protected def assertDataInDb(expected: PgAllTypesRecord, recordInDb: util.Map[String, Object]): Unit = {
     assertEquals(expected.id, recordInDb.get("ID"))
@@ -382,7 +428,8 @@ class PgOrdinaryTableITCase extends OrdinaryTableITCase[PgAllTypesRecord] {
   }
 
 
-  override protected def recordToParams(record: PgAllTypesRecord) = {
+  override protected def recordToParams(record: PgAllTypesRecord)(implicit conn: Connection) = {
+
     Seq[Any](
       record.id,
 
@@ -410,8 +457,8 @@ class PgOrdinaryTableITCase extends OrdinaryTableITCase[PgAllTypesRecord] {
       record.longOpt,
       record.short,
       record.shortOpt,
-      record.sqlXml,
-      record.sqlXmlOpt,
+      toSQLXML(record.sqlXml), //TODO: call `sqlxml.free()` after usage
+      record.sqlXmlOpt.map(toSQLXML), //TODO: call `sqlxml.free()` after usage
       record.string,
       record.stringOpt,
       record.stringFromAsciiStream,
@@ -425,4 +472,49 @@ class PgOrdinaryTableITCase extends OrdinaryTableITCase[PgAllTypesRecord] {
     )
   }
 
+  private def largeColumnRecordToParams(record: PgLargeColumnRecord) = {
+    Seq[Any](
+      record.id,
+      new PgSetBytesAsBlobParam(record.byteSeqFromBlob.toArray),
+      record.byteSeqFromBlobOpt.map(seq => new PgSetBytesAsBlobParam(seq.toArray))
+    )
+  }
+
+
+  override def perClassInit(): Unit = {
+    super.perClassInit()
+    withConn { conn =>
+      testJdbc.execute(conn, ddlForLargeColumnTable)
+      ()
+    }
+  }
+
+  @Test
+  def largeColumnRecordCrud(): Unit = {
+    //See https://jdbc.postgresql.org/documentation/binary-data/
+
+    withConn { implicit conn =>
+      transaction {
+        val totalFields =  PgLargeColumnRecord(id = 1, byteSeqFromBlob = Seq[Byte](13, 14, 15), byteSeqFromBlobOpt = Some(Seq[Byte](16, 17, 18)))
+        val requiredFields = PgLargeColumnRecord(id = 2, byteSeqFromBlob = Seq[Byte](13, 14, 15), byteSeqFromBlobOpt = None)
+        val insertSql = "insert into large_column_record(id,byte_seq_from_blob, byte_seq_from_blob_opt) values(?,?,?)"
+
+        jdbcRoutine.update(insertSql, largeColumnRecordToParams(totalFields):_*)
+        jdbcRoutine.update(insertSql, largeColumnRecordToParams(requiredFields):_*)
+
+        val querySql = "select * from large_column_record order by id"
+
+        val recordsInDb = jdbcRoutine.queryForSeq(querySql, new PgLargeColumnRecordRowHandler)
+        assertEquals(2, recordsInDb.size)
+        assertEquals(totalFields, recordsInDb(0))
+        assertEquals(requiredFields, recordsInDb(1))
+
+        val recordsInDbByAnotherHandler = jdbcRoutine.queryForSeq(querySql, new PgLargeColumnRecordByIndexRowHandler)
+        assertEquals(2, recordsInDbByAnotherHandler.size)
+        assertEquals(totalFields, recordsInDbByAnotherHandler(0))
+        assertEquals(requiredFields, recordsInDbByAnotherHandler(1))
+      }
+
+    }
+  }
 }

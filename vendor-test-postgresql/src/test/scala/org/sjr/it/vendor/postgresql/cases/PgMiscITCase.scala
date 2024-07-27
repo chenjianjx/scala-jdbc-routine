@@ -37,17 +37,13 @@ class PgMiscITCase extends MiscITCase {
 
 
   @Test
-  def complimentTestCoverage_unsupportedTypes(): Unit = {
+  def complementTestCoverage_unsupportedTypes(): Unit = {
 
     withConn { implicit conn =>
 
       val sql = "SELECT 'abc' AS value"
 
-      //Blob in postgres is not supported by this library
-      assertThrows(classOf[SQLException], () => jdbcRoutine.queryForSingle(sql, row => row.getBlob("value")).asInstanceOf[Unit])
-      assertThrows(classOf[SQLException], () => jdbcRoutine.queryForSingle(sql, row => row.getBlob(1)).asInstanceOf[Unit])
-
-      //Clob in postgres is not supported by this library
+      //Not supported by postgres's jdbc driver
       assertThrows(classOf[SQLException], () => jdbcRoutine.queryForSingle(sql, row => row.getClob("value")).asInstanceOf[Unit])
       assertThrows(classOf[SQLException], () => jdbcRoutine.queryForSingle(sql, row => row.getClob(1)).asInstanceOf[Unit])
 
@@ -73,7 +69,7 @@ class PgMiscITCase extends MiscITCase {
   }
 
   @Test
-  def complimentTestCoverage_getAutoKeyFromReturnedColumns(): Unit = {
+  def complementTestCoverage_getAutoKeyFromReturnedColumns(): Unit = {
 
     withConn { implicit conn =>
       jdbcRoutine.updateAndGetGeneratedKeysFromReturnedColumns[Long](insertIntoTableWithAutoKey, Array("id"), generatedKeysHandler, 123)

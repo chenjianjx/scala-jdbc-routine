@@ -5,10 +5,11 @@ import org.sjr.it.vendor.common.cases.{AllTypesRecord, OrdinaryTableITCase}
 import org.sjr.it.vendor.common.support.{ConnFactory, TestContainerConnFactory}
 import org.sjr.it.vendor.mysql.cases
 import org.sjr.it.vendor.mysql.support.createMySQLContainer
-import org.sjr.testutil.{readerToString, toByteSeq, toUtf8String}
+import org.sjr.testutil.{readerToString, streamToByteSeq, toUtf8String}
 import org.sjr.{RowHandler, WrappedResultSet}
 
 import java.net.URL
+import java.sql.Connection
 import java.util
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -79,7 +80,7 @@ class MySqlOrdinaryTableITCase extends OrdinaryTableITCase[MySqlAllTypesRecord] 
 
   override protected def stringOptColumnName: String = "string_opt"
 
-  override protected def ddlForTable: String =
+  override protected def ddlsForTable: Seq[String]  = Seq(
     """
       |CREATE TABLE all_types_record (
       |  id BIGINT PRIMARY KEY,
@@ -131,7 +132,7 @@ class MySqlOrdinaryTableITCase extends OrdinaryTableITCase[MySqlAllTypesRecord] 
       |  url_value VARCHAR(2083) NOT NULL,
       |  url_opt VARCHAR(2083)
       |)
-      |""".stripMargin
+      |""".stripMargin)
 
 
   override protected def insertSql: String =
@@ -310,10 +311,10 @@ class MySqlOrdinaryTableITCase extends OrdinaryTableITCase[MySqlAllTypesRecord] 
       booleanOpt = rs.getScalaBooleanOpt("BOOLEAN_OPT"),
       byte = rs.getScalaByte("BYTE_VALUE"),
       byteOpt = rs.getScalaByteOpt("BYTE_OPT"),
-      byteSeqFromBinaryStream = toByteSeq(rs.getBinaryStream("BYTE_SEQ_FROM_BINARY_STREAM")),
-      byteSeqFromBinaryStreamOpt = rs.getBinaryStreamOpt("BYTE_SEQ_FROM_BINARY_STREAM_OPT").map(toByteSeq),
-      byteSeqFromBlob = toByteSeq(rs.getBlob("BYTE_SEQ_FROM_BLOB").getBinaryStream),
-      byteSeqFromBlobOpt = rs.getBlobOpt("BYTE_SEQ_FROM_BLOB_OPT").map(blob => toByteSeq(blob.getBinaryStream)),
+      byteSeqFromBinaryStream = streamToByteSeq(rs.getBinaryStream("BYTE_SEQ_FROM_BINARY_STREAM")),
+      byteSeqFromBinaryStreamOpt = rs.getBinaryStreamOpt("BYTE_SEQ_FROM_BINARY_STREAM_OPT").map(streamToByteSeq),
+      byteSeqFromBlob = streamToByteSeq(rs.getBlob("BYTE_SEQ_FROM_BLOB").getBinaryStream),
+      byteSeqFromBlobOpt = rs.getBlobOpt("BYTE_SEQ_FROM_BLOB_OPT").map(blob => streamToByteSeq(blob.getBinaryStream)),
       byteSeqFromBytes = rs.getBytes("BYTE_SEQ_FROM_BYTES").toSeq,
       byteSeqFromBytesOpt = rs.getBytesOpt("BYTE_SEQ_FROM_BYTES_OPT").map(_.toSeq),
       date = rs.getDate("DATE_VALUE"),
@@ -331,7 +332,7 @@ class MySqlOrdinaryTableITCase extends OrdinaryTableITCase[MySqlAllTypesRecord] 
       short = rs.getScalaShort("SHORT_VALUE"),
       shortOpt = rs.getScalaShortOpt("SHORT_OPT"),
       sqlXml = rs.getSQLXML("SQL_XML").getString,
-      sqlXmlOpt = rs.getSQLXMLOpt("SQL_XML_OPT").flatMap(sx => Option(sx.getString)), //mysql jdbc driver problem: null column value won't be returned as NULL
+      sqlXmlOpt = rs.getSQLXMLOpt("SQL_XML_OPT").flatMap(sx => Option(sx.getString)), //mysql jdbc driver problem of getSQLXML(): null column value won't be returned as NULL
       stringFromAsciiStream = toUtf8String(rs.getAsciiStream("STRING_FROM_ASCII_STREAM")),
       stringFromAsciiStreamOpt = rs.getAsciiStreamOpt("STRING_FROM_ASCII_STREAM_OPT").map(toUtf8String),
       stringFromCharacterStream = readerToString(rs.getCharacterStream("STRING_FROM_CHARACTER_STREAM")),
@@ -367,10 +368,10 @@ class MySqlOrdinaryTableITCase extends OrdinaryTableITCase[MySqlAllTypesRecord] 
         booleanOpt = rs.getScalaBooleanOpt(i.getAndIncrement),
         byte = rs.getScalaByte(i.getAndIncrement),
         byteOpt = rs.getScalaByteOpt(i.getAndIncrement),
-        byteSeqFromBinaryStream = toByteSeq(rs.getBinaryStream(i.getAndIncrement)),
-        byteSeqFromBinaryStreamOpt = rs.getBinaryStreamOpt(i.getAndIncrement).map(toByteSeq),
-        byteSeqFromBlob = toByteSeq(rs.getBlob(i.getAndIncrement).getBinaryStream),
-        byteSeqFromBlobOpt = rs.getBlobOpt(i.getAndIncrement).map(blob => toByteSeq(blob.getBinaryStream)),
+        byteSeqFromBinaryStream = streamToByteSeq(rs.getBinaryStream(i.getAndIncrement)),
+        byteSeqFromBinaryStreamOpt = rs.getBinaryStreamOpt(i.getAndIncrement).map(streamToByteSeq),
+        byteSeqFromBlob = streamToByteSeq(rs.getBlob(i.getAndIncrement).getBinaryStream),
+        byteSeqFromBlobOpt = rs.getBlobOpt(i.getAndIncrement).map(blob => streamToByteSeq(blob.getBinaryStream)),
         byteSeqFromBytes = rs.getBytes(i.getAndIncrement).toSeq,
         byteSeqFromBytesOpt = rs.getBytesOpt(i.getAndIncrement).map(_.toSeq),
         date = rs.getDate(i.getAndIncrement),
@@ -388,7 +389,7 @@ class MySqlOrdinaryTableITCase extends OrdinaryTableITCase[MySqlAllTypesRecord] 
         short = rs.getScalaShort(i.getAndIncrement),
         shortOpt = rs.getScalaShortOpt(i.getAndIncrement),
         sqlXml = rs.getSQLXML(i.getAndIncrement).getString,
-        sqlXmlOpt = rs.getSQLXMLOpt(i.getAndIncrement).flatMap(sx => Option(sx.getString)), //mysql jdbc driver problem: null column value won't be returned as NULL
+        sqlXmlOpt = rs.getSQLXMLOpt(i.getAndIncrement).flatMap(sx => Option(sx.getString)), //mysql jdbc driver problem of getSQLXML(): null column value won't be returned as NULL
         stringFromAsciiStream = toUtf8String(rs.getAsciiStream(i.getAndIncrement)),
         stringFromAsciiStreamOpt = rs.getAsciiStreamOpt(i.getAndIncrement).map(toUtf8String),
         stringFromCharacterStream = readerToString(rs.getCharacterStream(i.getAndIncrement)),
@@ -462,7 +463,7 @@ class MySqlOrdinaryTableITCase extends OrdinaryTableITCase[MySqlAllTypesRecord] 
     assertEquals(expected.urlOpt.map(_.toString), Option(recordInDb.get("URL_OPT")))
   }
 
-  override protected def recordToParams(record: MySqlAllTypesRecord) = {
+  override protected def recordToParams(record: MySqlAllTypesRecord)(implicit conn: Connection) = {
     Seq[Any](
       record.id,
 

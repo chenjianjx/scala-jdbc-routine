@@ -5,8 +5,10 @@ import org.sjr.it.vendor.common.cases.{AllTypesRecord, OrdinaryTableITCase}
 import org.sjr.it.vendor.common.support.{ConnFactory, TestContainerConnFactory}
 import org.sjr.it.vendor.sqlServer.cases
 import org.sjr.it.vendor.sqlserver.support.createSqlServerContainer
-import org.sjr.testutil.{readerToString, toByteSeq, toUtf8String}
-import org.sjr.{RowHandler, WrappedResultSet}
+import org.sjr.testutil.{readerToString, streamToByteSeq, toUtf8String}
+import org.sjr.{PreparedStatementSetterParam, RowHandler, WrappedResultSet}
+
+import java.sql.{Connection, PreparedStatement}
 import java.util
 import java.util.concurrent.atomic.AtomicInteger
 
@@ -21,11 +23,11 @@ case class SqlServerAllTypesRecord(
                                     byte: Byte,
                                     byteOpt: Option[Byte],
                                     byteSeqFromBinaryStream: Seq[Byte],
-                                    // byteSeqFromBinaryStreamOpt: Option[Seq[Byte]],
-                                    //                                byteSeqFromBlob: Seq[Byte],
-                                    //                                byteSeqFromBlobOpt: Option[Seq[Byte]],
+                                    byteSeqFromBinaryStreamOpt: Option[Seq[Byte]],
+                                    byteSeqFromBlob: Seq[Byte],
+                                    byteSeqFromBlobOpt: Option[Seq[Byte]],
                                     byteSeqFromBytes: Seq[Byte],
-                                    // byteSeqFromBytesOpt: Option[Seq[Byte]],
+                                    byteSeqFromBytesOpt: Option[Seq[Byte]],
                                     date: java.sql.Date,
                                     dateOpt: Option[java.sql.Date],
                                     double: Double,
@@ -40,8 +42,8 @@ case class SqlServerAllTypesRecord(
                                     nStringOpt: Option[String],
                                     short: Short,
                                     shortOpt: Option[Short],
-                                    //                                sqlXml: String,
-                                    //                                sqlXmlOpt: Option[String],
+                                    sqlXml: String,
+                                    sqlXmlOpt: Option[String],
                                     stringFromAsciiStream: String,
                                     stringFromAsciiStreamOpt: Option[String],
                                     stringFromCharacterStream: String,
@@ -63,6 +65,15 @@ case class SqlServerAllTypesRecord(
   override def makeCopy(string: String): SqlServerAllTypesRecord = this.copy(string = string)
 }
 
+class SqlServerSetBytesParam(bytesOpt: Option[Array[Byte]]) extends PreparedStatementSetterParam {
+  override def doSet(stmt: PreparedStatement, index: Int): Unit = {
+    bytesOpt match {
+      case Some(bytes) => stmt.setBytes(index, bytes)
+      case None => stmt.setBytes(index, None.orNull)
+    }
+  }
+}
+
 class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypesRecord] {
 
   override protected def getConnFactory(): ConnFactory = new TestContainerConnFactory(createSqlServerContainer())
@@ -75,8 +86,7 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
 
   override protected def stringOptColumnName: String = "string_opt"
 
-  //TODO: bring back:  xml type ,blob
-  override protected def ddlForTable: String =
+  override protected def ddlsForTable: Seq[String]  = Seq(
     """
       |CREATE TABLE all_types_record (
       |  id BIGINT PRIMARY KEY,
@@ -88,11 +98,11 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
       |  byte_value TINYINT NOT NULL,
       |  byte_opt TINYINT,
       |  byte_seq_from_binary_stream VARBINARY(100) NOT NULL,
-      |  -- byte_seq_from_binary_stream_opt VARBINARY(100),
-      |  -- byte_seq_from_blob BLOB NOT NULL,
-      |  -- byte_seq_from_blob_opt BLOB,
+      |  byte_seq_from_binary_stream_opt VARBINARY(100),
+      |  byte_seq_from_blob VARBINARY(MAX) NOT NULL,
+      |  byte_seq_from_blob_opt VARBINARY(MAX),
       |  byte_seq_from_bytes VARBINARY(100) NOT NULL,
-      |  -- byte_seq_from_bytes_opt VARBINARY(100),
+      |  byte_seq_from_bytes_opt VARBINARY(100),
       |  date_value DATE NOT NULL,
       |  date_opt DATE,
       |  double_value FLOAT NOT NULL,
@@ -107,8 +117,8 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
       |  nstring_opt NVARCHAR(2),
       |  short_value SMALLINT NOT NULL,
       |  short_opt SMALLINT,
-      |  -- sql_xml XMLTYPE NOT NULL,
-      |  -- sql_xml_opt XMLTYPE,
+      |  sql_xml XML NOT NULL,
+      |  sql_xml_opt XML,
       |  string_from_ascii_stream TEXT NOT NULL,
       |  string_from_ascii_stream_opt TEXT,
       |  string_from_character_stream TEXT NOT NULL,
@@ -126,7 +136,7 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
       |  timestamp_value DATETIME NOT NULL,
       |  timestamp_opt DATETIME
       |)
-      |""".stripMargin
+      |""".stripMargin)
 
 
   override protected def insertSql: String =
@@ -141,11 +151,11 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
       |    byte_value,
       |    byte_opt,
       |    byte_seq_from_binary_stream,
-      |    -- byte_seq_from_binary_stream_opt,
-      |    -- byte_seq_from_blob,
-      |    -- byte_seq_from_blob_opt,
+      |    byte_seq_from_binary_stream_opt,
+      |    byte_seq_from_blob,
+      |    byte_seq_from_blob_opt,
       |    byte_seq_from_bytes,
-      |    -- byte_seq_from_bytes_opt,
+      |    byte_seq_from_bytes_opt,
       |    date_value,
       |    date_opt,
       |    double_value,
@@ -160,8 +170,8 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
       |    nstring_opt,
       |    short_value,
       |    short_opt,
-      |    -- sql_xml,
-      |    -- sql_xml_opt,
+      |    sql_xml,
+      |    sql_xml_opt,
       |    string,
       |    string_opt,
       |    string_from_ascii_stream,
@@ -179,7 +189,7 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
       |    timestamp_value,
       |    timestamp_opt
       |) VALUES (
-      |    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+      |    ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
       |)
       |""".stripMargin
 
@@ -194,11 +204,11 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
     byte = 120,
     byteOpt = Some(121),
     byteSeqFromBinaryStream = Seq[Byte](1, 2, 3),
-    // byteSeqFromBinaryStreamOpt = Some(Seq[Byte](4, 5, 6)),
-    //    byteSeqFromBlob = Seq[Byte](13, 14, 15),
-    //    byteSeqFromBlobOpt = Some(Seq[Byte](16, 17, 18)),
+    byteSeqFromBinaryStreamOpt = Some(Seq[Byte](4, 5, 6)),
+    byteSeqFromBlob = Seq[Byte](13, 14, 15),
+    byteSeqFromBlobOpt = Some(Seq[Byte](16, 17, 18)),
     byteSeqFromBytes = Seq[Byte](7, 8, 9),
-    // byteSeqFromBytesOpt = Some(Seq[Byte](10, 11, 12)),
+    byteSeqFromBytesOpt = Some(Seq[Byte](10, 11, 12)),
     date = java.sql.Date.valueOf("2024-01-01"),
     dateOpt = Some(java.sql.Date.valueOf("2024-02-02")),
     double = 7.89,
@@ -213,8 +223,8 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
     nStringOpt = Some("火星"),
     short = 1,
     shortOpt = Some(2),
-    //    sqlXml = "<root>foo</root>",
-    //    sqlXmlOpt = Some("<root>bar</root>"),
+    sqlXml = "<root>foo</root>",
+    sqlXmlOpt = Some("<root>bar</root>"),
     stringFromAsciiStream = "abc",
     stringFromAsciiStreamOpt = Some("def"),
     stringFromCharacterStream = "aabbcc",
@@ -243,11 +253,11 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
     byte = 120,
     byteOpt = None,
     byteSeqFromBinaryStream = Seq[Byte](1, 2, 3),
-    // byteSeqFromBinaryStreamOpt = None,
-    //    byteSeqFromBlob = Seq[Byte](13, 14, 15),
-    //    byteSeqFromBlobOpt = None,
+    byteSeqFromBinaryStreamOpt = None,
+    byteSeqFromBlob = Seq[Byte](13, 14, 15),
+    byteSeqFromBlobOpt = None,
     byteSeqFromBytes = Seq[Byte](7, 8, 9),
-    // byteSeqFromBytesOpt = None,
+    byteSeqFromBytesOpt = None,
     date = java.sql.Date.valueOf("2024-01-01"),
     dateOpt = None,
     double = 7.89,
@@ -262,8 +272,8 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
     nStringOpt = None,
     short = 1,
     shortOpt = None,
-    //    sqlXml = "<root>foo</root>",
-    //    sqlXmlOpt = None,
+    sqlXml = "<root>foo</root>",
+    sqlXmlOpt = None,
     stringFromAsciiStream = "abc",
     stringFromAsciiStreamOpt = None,
     stringFromCharacterStream = "aabbcc",
@@ -298,12 +308,12 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
       booleanOpt = rs.getScalaBooleanOpt("BOOLEAN_OPT"),
       byte = rs.getScalaByte("BYTE_VALUE"),
       byteOpt = rs.getScalaByteOpt("BYTE_OPT"),
-      byteSeqFromBinaryStream = toByteSeq(rs.getBinaryStream("BYTE_SEQ_FROM_BINARY_STREAM")),
-      // byteSeqFromBinaryStreamOpt = rs.getBinaryStreamOpt("BYTE_SEQ_FROM_BINARY_STREAM_OPT").map(toByteSeq),
-      //      byteSeqFromBlob = toByteSeq(rs.getBlob("BYTE_SEQ_FROM_BLOB").getBinaryStream),
-      //      byteSeqFromBlobOpt = rs.getBlobOpt("BYTE_SEQ_FROM_BLOB_OPT").map(blob => toByteSeq(blob.getBinaryStream)),
+      byteSeqFromBinaryStream = streamToByteSeq(rs.getBinaryStream("BYTE_SEQ_FROM_BINARY_STREAM")),
+      byteSeqFromBinaryStreamOpt = rs.getBinaryStreamOpt("BYTE_SEQ_FROM_BINARY_STREAM_OPT").map(streamToByteSeq),
+      byteSeqFromBlob = streamToByteSeq(rs.getBlob("BYTE_SEQ_FROM_BLOB").getBinaryStream),
+      byteSeqFromBlobOpt = rs.getBlobOpt("BYTE_SEQ_FROM_BLOB_OPT").map(blob => streamToByteSeq(blob.getBinaryStream)),
       byteSeqFromBytes = rs.getBytes("BYTE_SEQ_FROM_BYTES").toSeq,
-      // byteSeqFromBytesOpt = rs.getBytesOpt("BYTE_SEQ_FROM_BYTES_OPT").map(_.toSeq),
+      byteSeqFromBytesOpt = rs.getBytesOpt("BYTE_SEQ_FROM_BYTES_OPT").map(_.toSeq),
       date = rs.getDate("DATE_VALUE"),
       dateOpt = rs.getDateOpt("DATE_OPT"),
       double = rs.getScalaDouble("DOUBLE_VALUE"),
@@ -318,8 +328,8 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
       nStringOpt = rs.getNStringOpt("NSTRING_OPT"),
       short = rs.getScalaShort("SHORT_VALUE"),
       shortOpt = rs.getScalaShortOpt("SHORT_OPT"),
-      //      sqlXml = rs.getSQLXML("SQL_XML").getString,
-      //      sqlXmlOpt = rs.getSQLXMLOpt("SQL_XML_OPT").flatMap(sx => Option(sx.getString)), //sqlServer jdbc driver problem: null column value won't be returned as NULL
+      sqlXml = rs.getSQLXML("SQL_XML").getString,
+      sqlXmlOpt = rs.getSQLXMLOpt("SQL_XML_OPT").map(_.getString),
       stringFromAsciiStream = toUtf8String(rs.getAsciiStream("STRING_FROM_ASCII_STREAM")),
       stringFromAsciiStreamOpt = rs.getAsciiStreamOpt("STRING_FROM_ASCII_STREAM_OPT").map(toUtf8String),
       stringFromCharacterStream = readerToString(rs.getCharacterStream("STRING_FROM_CHARACTER_STREAM")),
@@ -353,12 +363,12 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
         booleanOpt = rs.getScalaBooleanOpt(i.getAndIncrement),
         byte = rs.getScalaByte(i.getAndIncrement),
         byteOpt = rs.getScalaByteOpt(i.getAndIncrement),
-        byteSeqFromBinaryStream = toByteSeq(rs.getBinaryStream(i.getAndIncrement)),
-        // byteSeqFromBinaryStreamOpt = rs.getBinaryStreamOpt(i.getAndIncrement).map(toByteSeq),
-        //        byteSeqFromBlob = toByteSeq(rs.getBlob(i.getAndIncrement).getBinaryStream),
-        //        byteSeqFromBlobOpt = rs.getBlobOpt(i.getAndIncrement).map(blob => toByteSeq(blob.getBinaryStream)),
+        byteSeqFromBinaryStream = streamToByteSeq(rs.getBinaryStream(i.getAndIncrement)),
+        byteSeqFromBinaryStreamOpt = rs.getBinaryStreamOpt(i.getAndIncrement).map(streamToByteSeq),
+        byteSeqFromBlob = streamToByteSeq(rs.getBlob(i.getAndIncrement).getBinaryStream),
+        byteSeqFromBlobOpt = rs.getBlobOpt(i.getAndIncrement).map(blob => streamToByteSeq(blob.getBinaryStream)),
         byteSeqFromBytes = rs.getBytes(i.getAndIncrement).toSeq,
-        // byteSeqFromBytesOpt = rs.getBytesOpt(i.getAndIncrement).map(_.toSeq),
+        byteSeqFromBytesOpt = rs.getBytesOpt(i.getAndIncrement).map(_.toSeq),
         date = rs.getDate(i.getAndIncrement),
         dateOpt = rs.getDateOpt(i.getAndIncrement),
         double = rs.getScalaDouble(i.getAndIncrement),
@@ -373,8 +383,8 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
         nStringOpt = rs.getNStringOpt(i.getAndIncrement),
         short = rs.getScalaShort(i.getAndIncrement),
         shortOpt = rs.getScalaShortOpt(i.getAndIncrement),
-        //        sqlXml = rs.getSQLXML(i.getAndIncrement).getString,
-        //        sqlXmlOpt = rs.getSQLXMLOpt(i.getAndIncrement).flatMap(sx => Option(sx.getString)), //sqlServer jdbc driver problem: null column value won't be returned as NULL
+        sqlXml = rs.getSQLXML(i.getAndIncrement).getString,
+        sqlXmlOpt = rs.getSQLXMLOpt(i.getAndIncrement).map(_.getString),
         stringFromAsciiStream = toUtf8String(rs.getAsciiStream(i.getAndIncrement)),
         stringFromAsciiStreamOpt = rs.getAsciiStreamOpt(i.getAndIncrement).map(toUtf8String),
         stringFromCharacterStream = readerToString(rs.getCharacterStream(i.getAndIncrement)),
@@ -405,11 +415,11 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
     assertEquals(expected.byte.toShort, recordInDb.get("BYTE_VALUE"))
     assertEquals(expected.byteOpt.map(_.toShort), Option(recordInDb.get("BYTE_OPT")))
     assertEquals(expected.byteSeqFromBinaryStream, recordInDb.get("BYTE_SEQ_FROM_BINARY_STREAM").asInstanceOf[scala.Array[Byte]].toSeq)
-    // assertEquals(expected.byteSeqFromBinaryStreamOpt, Option(recordInDb.get("BYTE_SEQ_FROM_BINARY_STREAM_OPT")).map(_.asInstanceOf[scala.Array[Byte]].toSeq))
-    //    assertEquals(expected.byteSeqFromBlob, recordInDb.get("BYTE_SEQ_FROM_BLOB").asInstanceOf[scala.Array[Byte]].toSeq)
-    //    assertEquals(expected.byteSeqFromBlobOpt, Option(recordInDb.get("BYTE_SEQ_FROM_BLOB_OPT")).map(_.asInstanceOf[scala.Array[Byte]].toSeq))
+    assertEquals(expected.byteSeqFromBinaryStreamOpt, Option(recordInDb.get("BYTE_SEQ_FROM_BINARY_STREAM_OPT")).map(_.asInstanceOf[scala.Array[Byte]].toSeq))
+    assertEquals(expected.byteSeqFromBlob, recordInDb.get("BYTE_SEQ_FROM_BLOB").asInstanceOf[scala.Array[Byte]].toSeq)
+    assertEquals(expected.byteSeqFromBlobOpt, Option(recordInDb.get("BYTE_SEQ_FROM_BLOB_OPT")).map(_.asInstanceOf[scala.Array[Byte]].toSeq))
     assertEquals(expected.byteSeqFromBytes, recordInDb.get("BYTE_SEQ_FROM_BYTES").asInstanceOf[scala.Array[Byte]].toSeq)
-    // assertEquals(expected.byteSeqFromBytesOpt, Option(recordInDb.get("BYTE_SEQ_FROM_BYTES_OPT")).map(_.asInstanceOf[scala.Array[Byte]].toSeq))
+    assertEquals(expected.byteSeqFromBytesOpt, Option(recordInDb.get("BYTE_SEQ_FROM_BYTES_OPT")).map(_.asInstanceOf[scala.Array[Byte]].toSeq))
     assertEquals(expected.date, recordInDb.get("DATE_VALUE"))
     assertEquals(expected.dateOpt, Option(recordInDb.get("DATE_OPT")))
     assertEquals(expected.double, recordInDb.get("DOUBLE_VALUE"))
@@ -424,8 +434,8 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
     assertEquals(expected.nStringOpt, Option(recordInDb.get("NSTRING_OPT")))
     assertEquals(expected.short, recordInDb.get("SHORT_VALUE"))
     assertEquals(expected.shortOpt, Option(recordInDb.get("SHORT_OPT")))
-    //    assertEquals(expected.sqlXml, recordInDb.get("SQL_XML"))
-    //    assertEquals(expected.sqlXmlOpt, Option(recordInDb.get("SQL_XML_OPT")))
+    assertEquals(expected.sqlXml, recordInDb.get("SQL_XML"))
+    assertEquals(expected.sqlXmlOpt, Option(recordInDb.get("SQL_XML_OPT")))
     assertEquals(expected.stringFromAsciiStream, recordInDb.get("STRING_FROM_ASCII_STREAM"))
     assertEquals(expected.stringFromAsciiStreamOpt, Option(recordInDb.get("STRING_FROM_ASCII_STREAM_OPT")))
     assertEquals(expected.stringFromCharacterStream, recordInDb.get("STRING_FROM_CHARACTER_STREAM"))
@@ -444,7 +454,7 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
     assertEquals(expected.timestampOpt, Option(recordInDb.get("TIMESTAMP_OPT")))
   }
 
-  override protected def recordToParams(record: SqlServerAllTypesRecord) = {
+  override protected def recordToParams(record: SqlServerAllTypesRecord)(implicit conn: Connection) = {
     Seq[Any](
       record.id,
 
@@ -454,12 +464,12 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
       record.booleanOpt,
       record.byte,
       record.byteOpt,
-      record.byteSeqFromBinaryStream.toArray,
-      // record.byteSeqFromBinaryStreamOpt.map(_.toArray),
-      //      record.byteSeqFromBlob.toArray,
-      //      record.byteSeqFromBlobOpt.map(_.toArray),
-      record.byteSeqFromBytes.toArray,
-      // record.byteSeqFromBytesOpt.map(_.toArray),
+      new SqlServerSetBytesParam(Some(record.byteSeqFromBinaryStream.toArray)),
+      new SqlServerSetBytesParam(record.byteSeqFromBinaryStreamOpt.map(_.toArray)),
+      new SqlServerSetBytesParam(Some(record.byteSeqFromBlob.toArray)),
+      new SqlServerSetBytesParam(record.byteSeqFromBlobOpt.map(_.toArray)),
+      new SqlServerSetBytesParam(Some(record.byteSeqFromBytes.toArray)),
+      new SqlServerSetBytesParam(record.byteSeqFromBytesOpt.map(_.toArray)),
       record.date,
       record.dateOpt,
       record.double,
@@ -474,8 +484,8 @@ class SqlServerOrdinaryTableITCase extends OrdinaryTableITCase[SqlServerAllTypes
       record.nStringOpt,
       record.short,
       record.shortOpt,
-      //      record.sqlXml,
-      //      record.sqlXmlOpt,
+      record.sqlXml,
+      record.sqlXmlOpt,
       record.string,
       record.stringOpt,
       record.stringFromAsciiStream,

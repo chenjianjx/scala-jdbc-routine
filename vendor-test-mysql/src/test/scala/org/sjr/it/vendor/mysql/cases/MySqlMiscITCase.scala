@@ -5,9 +5,9 @@ import org.junit.jupiter.api.Test
 import org.sjr.it.vendor.common.cases.MiscITCase
 import org.sjr.it.vendor.common.support.{ConnFactory, TestContainerConnFactory, withConn}
 import org.sjr.it.vendor.mysql.support.createMySQLContainer
-import org.sjr.{GeneratedKeysHandler, WrappedResultSet}
+import org.sjr.{GeneratedKeysHandler, PreparedStatementSetterParam, WrappedResultSet}
 
-import java.sql.SQLFeatureNotSupportedException
+import java.sql.{PreparedStatement, SQLFeatureNotSupportedException}
 
 class MySqlMiscITCase extends MiscITCase {
 
@@ -35,30 +35,41 @@ class MySqlMiscITCase extends MiscITCase {
     }
   }
 
+  //getArray() is not supported by mysql's jdbc driver.
   @Test
-  def complimentTestCoverage_getArray(): Unit = {
+  def complementTestCoverage_getArray(): Unit = {
 
     withConn { implicit conn =>
-
       val sql = "SELECT 'abc' AS value"
-
-      //Not supported by mysql's jdbc driver
       assertThrows(classOf[SQLFeatureNotSupportedException], () => jdbcRoutine.queryForSingle(sql, row => row.getArray("value")).asInstanceOf[Unit])
       assertThrows(classOf[SQLFeatureNotSupportedException], () => jdbcRoutine.queryForSingle(sql, row => row.getArray(1)).asInstanceOf[Unit])
-
       ()
     }
 
   }
 
   @Test
-  def complimentTestCoverage_getAutoKeyFromReturnedColumns(): Unit = {
-
+  def complementTestCoverage_getAutoKeyFromReturnedColumns(): Unit = {
     withConn { implicit conn =>
-      jdbcRoutine.updateAndGetGeneratedKeysFromReturnedColumns[Long](insertIntoTableWithAutoKey, Array("whatever"), generatedKeysHandler, -1)
+      jdbcRoutine.updateAndGetGeneratedKeysFromReturnedColumns[Long](insertIntoTableWithAutoKey, Array("whatever"), generatedKeysHandler, 123)
       ()
     }
+  }
 
+  @Test
+  def complementTestCoverage_useSetterParam(): Unit = {
+    withConn {
+      implicit conn =>
+        jdbcRoutine.update(insertIntoTableWithAutoKey, new PreparedStatementSetterParam {
+          override def doSet(stmt: PreparedStatement, index: Int): Unit = stmt.setInt(index, 111)
+        })
+
+        jdbcRoutine.update(insertIntoTableWithAutoKey, Some(new PreparedStatementSetterParam {
+          override def doSet(stmt: PreparedStatement, index: Int): Unit = stmt.setInt(index, 222)
+        }))
+
+        ()
+    }
   }
 
 }
