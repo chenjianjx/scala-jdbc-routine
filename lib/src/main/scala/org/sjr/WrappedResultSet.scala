@@ -60,24 +60,24 @@ class WrappedResultSet(private val delegate: ResultSet) {
   /**
    * Won't default to false if value doesn't exist. Instead an SQLException will be thrown.
    */
-  def getBoolean(columnIndex: Int): Boolean = getOrThrow(columnIndex, getBooleanOpt(columnIndex))
+  def getScalaBoolean(columnIndex: Int): Boolean = getOrThrow(columnIndex, getScalaBooleanOpt(columnIndex))
 
-  def getBoolean(columnLabel: String): Boolean = getOrThrow(columnLabel, getBooleanOpt(columnLabel))
+  def getScalaBoolean(columnLabel: String): Boolean = getOrThrow(columnLabel, getScalaBooleanOpt(columnLabel))
 
-  def getBooleanOpt(columnIndex: Int): Option[Boolean] = primitiveOption(delegate.getBoolean(columnIndex))
+  def getScalaBooleanOpt(columnIndex: Int): Option[Boolean] = primitiveOption(delegate.getBoolean(columnIndex))
 
-  def getBooleanOpt(columnLabel: String): Option[Boolean] = primitiveOption(delegate.getBoolean(columnLabel))
-
-  def getByte(columnIndex: Int): Byte = getOrThrow(columnIndex, getByteOpt(columnIndex))
+  def getScalaBooleanOpt(columnLabel: String): Option[Boolean] = primitiveOption(delegate.getBoolean(columnLabel))
 
   /**
    * Won't default to 0 if value doesn't exist. Instead an SQLException will be thrown.
    */
-  def getByte(columnLabel: String): Byte = getOrThrow(columnLabel, getByteOpt(columnLabel))
+  def getScalaByte(columnIndex: Int): Byte = getOrThrow(columnIndex, getScalaByteOpt(columnIndex))
 
-  def getByteOpt(columnIndex: Int): Option[Byte] = primitiveOption(delegate.getByte(columnIndex))
+  def getScalaByte(columnLabel: String): Byte = getOrThrow(columnLabel, getScalaByteOpt(columnLabel))
 
-  def getByteOpt(columnLabel: String): Option[Byte] = primitiveOption(delegate.getByte(columnLabel))
+  def getScalaByteOpt(columnIndex: Int): Option[Byte] = primitiveOption(delegate.getByte(columnIndex))
+
+  def getScalaByteOpt(columnLabel: String): Option[Byte] = primitiveOption(delegate.getByte(columnLabel))
 
   def getBytes(columnIndex: Int): scala.Array[Byte] = getOrThrow(columnIndex, getBytesOpt(columnIndex))
 
@@ -114,46 +114,46 @@ class WrappedResultSet(private val delegate: ResultSet) {
   /**
    * Won't default to 0 if value doesn't exist. Instead an SQLException will be thrown.
    */
-  def getDouble(columnIndex: Int): Double = getOrThrow(columnIndex, getDoubleOpt(columnIndex))
+  def getScalaDouble(columnIndex: Int): Double = getOrThrow(columnIndex, getScalaDoubleOpt(columnIndex))
 
-  def getDouble(columnLabel: String): Double = getOrThrow(columnLabel, getDoubleOpt(columnLabel))
+  def getScalaDouble(columnLabel: String): Double = getOrThrow(columnLabel, getScalaDoubleOpt(columnLabel))
 
-  def getDoubleOpt(columnIndex: Int): Option[Double] = primitiveOption(delegate.getDouble(columnIndex))
+  def getScalaDoubleOpt(columnIndex: Int): Option[Double] = primitiveOption(delegate.getDouble(columnIndex))
 
-  def getDoubleOpt(columnLabel: String): Option[Double] = primitiveOption(delegate.getDouble(columnLabel))
-
-  /**
-   * Won't default to 0 if value doesn't exist. Instead an SQLException will be thrown.
-   */
-  def getFloat(columnIndex: Int): Float = getOrThrow(columnIndex, getFloatOpt(columnIndex))
-
-  def getFloat(columnLabel: String): Float = getOrThrow(columnLabel, getFloatOpt(columnLabel))
-
-  def getFloatOpt(columnIndex: Int): Option[Float] = primitiveOption(delegate.getFloat(columnIndex))
-
-  def getFloatOpt(columnLabel: String): Option[Float] = primitiveOption(delegate.getFloat(columnLabel))
+  def getScalaDoubleOpt(columnLabel: String): Option[Double] = primitiveOption(delegate.getDouble(columnLabel))
 
   /**
    * Won't default to 0 if value doesn't exist. Instead an SQLException will be thrown.
    */
-  def getInt(columnIndex: Int): Int = getOrThrow(columnIndex, getIntOpt(columnIndex))
+  def getScalaFloat(columnIndex: Int): Float = getOrThrow(columnIndex, getScalaFloatOpt(columnIndex))
 
-  def getInt(columnLabel: String): Int = getOrThrow(columnLabel, getIntOpt(columnLabel))
+  def getScalaFloat(columnLabel: String): Float = getOrThrow(columnLabel, getScalaFloatOpt(columnLabel))
 
-  def getIntOpt(columnIndex: Int): Option[Int] = primitiveOption(delegate.getInt(columnIndex))
+  def getScalaFloatOpt(columnIndex: Int): Option[Float] = primitiveOption(delegate.getFloat(columnIndex))
 
-  def getIntOpt(columnLabel: String): Option[Int] = primitiveOption(delegate.getInt(columnLabel))
+  def getScalaFloatOpt(columnLabel: String): Option[Float] = primitiveOption(delegate.getFloat(columnLabel))
 
   /**
    * Won't default to 0 if value doesn't exist. Instead an SQLException will be thrown.
    */
-  def getLong(columnIndex: Int): Long = getOrThrow(columnIndex, getLongOpt(columnIndex))
+  def getScalaInt(columnIndex: Int): Int = getOrThrow(columnIndex, getScalaIntOpt(columnIndex))
 
-  def getLong(columnLabel: String): Long = getOrThrow(columnLabel, getLongOpt(columnLabel))
+  def getScalaInt(columnLabel: String): Int = getOrThrow(columnLabel, getScalaIntOpt(columnLabel))
 
-  def getLongOpt(columnIndex: Int): Option[Long] = primitiveOption(delegate.getLong(columnIndex))
+  def getScalaIntOpt(columnIndex: Int): Option[Int] = primitiveOption(delegate.getInt(columnIndex))
 
-  def getLongOpt(columnLabel: String): Option[Long] = primitiveOption(delegate.getLong(columnLabel))
+  def getScalaIntOpt(columnLabel: String): Option[Int] = primitiveOption(delegate.getInt(columnLabel))
+
+  /**
+   * Won't default to 0 if value doesn't exist. Instead an SQLException will be thrown.
+   */
+  def getScalaLong(columnIndex: Int): Long = getOrThrow(columnIndex, getScalaLongOpt(columnIndex))
+
+  def getScalaLong(columnLabel: String): Long = getOrThrow(columnLabel, getScalaLongOpt(columnLabel))
+
+  def getScalaLongOpt(columnIndex: Int): Option[Long] = primitiveOption(delegate.getLong(columnIndex))
+
+  def getScalaLongOpt(columnLabel: String): Option[Long] = primitiveOption(delegate.getLong(columnLabel))
 
   def getNCharacterStream(columnIndex: Int): Reader = getOrThrow(columnIndex, getNCharacterStreamOpt(columnIndex))
 
@@ -198,13 +198,13 @@ class WrappedResultSet(private val delegate: ResultSet) {
   /**
    * Won't default to 0 if value doesn't exist. Instead an SQLException will be thrown.
    */
-  def getShort(columnIndex: Int): Short = getOrThrow(columnIndex, getShortOpt(columnIndex))
+  def getScalaShort(columnIndex: Int): Short = getOrThrow(columnIndex, getScalaShortOpt(columnIndex))
 
-  def getShort(columnLabel: String): Short = getOrThrow(columnLabel, getShortOpt(columnLabel))
+  def getScalaShort(columnLabel: String): Short = getOrThrow(columnLabel, getScalaShortOpt(columnLabel))
 
-  def getShortOpt(columnIndex: Int): Option[Short] = primitiveOption(delegate.getShort(columnIndex))
+  def getScalaShortOpt(columnIndex: Int): Option[Short] = primitiveOption(delegate.getShort(columnIndex))
 
-  def getShortOpt(columnLabel: String): Option[Short] = primitiveOption(delegate.getShort(columnLabel))
+  def getScalaShortOpt(columnLabel: String): Option[Short] = primitiveOption(delegate.getShort(columnLabel))
 
   def getSQLXML(columnIndex: Int): SQLXML = getOrThrow(columnIndex, getSQLXMLOpt(columnIndex))
 

@@ -6,7 +6,9 @@ testcontainers = "1.20.0"
 mysql-connector-java = "8.0.29"
 postgresql = "42.7.3"
 ojdbc = "23.4.0.24.05"
+sqlserver-jdbc="12.6.3.jre8"
 slf4j = "1.7.36"
+
 
 [libraries]
 
@@ -21,8 +23,10 @@ testcontainers-jdbc = { module = "org.testcontainers:jdbc", version.ref = "testc
 testcontainers-mysql = { module = "org.testcontainers:mysql", version.ref = "testcontainers" }
 testcontainers-postgresql = { module = "org.testcontainers:postgresql", version.ref = "testcontainers" }
 testcontainers-oracle-free = { module = "org.testcontainers:oracle-free", version.ref = "testcontainers" }
+testcontainers-sqlserver = { module = "org.testcontainers:mssqlserver", version.ref = "testcontainers" }
 mysql-connector-java = { module = "mysql:mysql-connector-java", version.ref = "mysql-connector-java" }
 postgresql = { module = "org.postgresql:postgresql", version.ref = "postgresql" }
 ojdbc = { module = "com.oracle.database.jdbc:ojdbc8", version.ref = "ojdbc" }
+sqlserver-jdbc = { module = "com.microsoft.sqlserver:mssql-jdbc", version.ref = "sqlserver-jdbc" }
 slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }

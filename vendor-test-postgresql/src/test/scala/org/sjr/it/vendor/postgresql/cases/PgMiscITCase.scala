@@ -29,7 +29,7 @@ class PgMiscITCase extends MiscITCase {
 
   private class PgGeneratedKeysHandler extends GeneratedKeysHandler[Long] {
     override def handle(resultSet: WrappedResultSet): Option[Long] = if (resultSet.next()) {
-      Some(resultSet.getLong(1))
+      Some(resultSet.getScalaLong(1))
     } else {
       None
     }

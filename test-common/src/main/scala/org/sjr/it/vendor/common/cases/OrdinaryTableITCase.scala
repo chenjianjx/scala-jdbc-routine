@@ -190,7 +190,7 @@ abstract class OrdinaryTableITCase[T <: AllTypesRecord[T]] extends VendorITCaseB
     }
 
     withConn { implicit conn =>
-      val idSeq = jdbcRoutine.queryForSeq(s"SELECT $idColumnName FROM $tableName ORDER BY $idColumnName", _.getLong("id"))
+      val idSeq = jdbcRoutine.queryForSeq(s"SELECT $idColumnName FROM $tableName ORDER BY $idColumnName", _.getScalaLong("id"))
       assertEquals(Seq(recordWithTotalFields.id, recordWithRequiredFields.id), idSeq)
     }
   }
@@ -210,7 +210,7 @@ abstract class OrdinaryTableITCase[T <: AllTypesRecord[T]] extends VendorITCaseB
     }
 
     withConn { implicit conn =>
-      val idSeq = jdbcRoutine.queryForSeq(s"SELECT $idColumnName FROM $tableName ORDER BY $idColumnName", _.getLong("id"))
+      val idSeq = jdbcRoutine.queryForSeq(s"SELECT $idColumnName FROM $tableName ORDER BY $idColumnName", _.getScalaLong("id"))
       assertEquals(Seq(), idSeq)
     }
   }

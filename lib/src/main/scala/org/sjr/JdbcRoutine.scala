@@ -146,7 +146,7 @@ class JdbcRoutine {
 
   private def setParams(stmt: PreparedStatement, params: Seq[Any]): Unit = {
     for (paramIndex <- 0 to params.length - 1) {
-      stmt.setObject(paramIndex + 1, toJavaJdbcValue(params(paramIndex)))
+      stmt.setObject(paramIndex + 1, toJavaValueForJdbc(params(paramIndex)))
     }
   }
 
@@ -154,11 +154,11 @@ class JdbcRoutine {
     for (paramIndex <- 0 to params.length - 1) {
       val param = params(paramIndex)
       param match {
-        case InParam(value) => stmt.setObject(paramIndex + 1, toJavaJdbcValue(value))
+        case InParam(value) => stmt.setObject(paramIndex + 1, toJavaValueForJdbc(value))
         case OutParam(sqlType) => stmt.registerOutParameter(paramIndex + 1, sqlType)
         case InOutParam(sqlType, value) =>
           stmt.registerOutParameter(paramIndex + 1, sqlType)
-          stmt.setObject(paramIndex + 1, toJavaJdbcValue(value), sqlType)
+          stmt.setObject(paramIndex + 1, toJavaValueForJdbc(value), sqlType)
       }
     }
   }
@@ -172,7 +172,7 @@ class JdbcRoutine {
   }
 
 
-  private def toJavaJdbcValue(scalaValue: Any) = {
+  private def toJavaValueForJdbc(scalaValue: Any) = {
     scalaValue match {
       case Some(v: BigDecimal) => v.bigDecimal
       case Some(v) => v

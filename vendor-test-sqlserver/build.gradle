@@ -1,0 +1,4 @@
+dependencies {
+    implementation libs.testcontainers.sqlserver
+    testRuntimeOnly libs.sqlserver.jdbc
+}

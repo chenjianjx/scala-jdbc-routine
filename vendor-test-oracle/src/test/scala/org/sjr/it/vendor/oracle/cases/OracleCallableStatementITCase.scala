@@ -91,8 +91,8 @@ class OracleCallableStatementITCase extends CallableStatementITCase {
 
   private class OracleForSpRecordRowHandler extends RowHandler[ForSpRecord] {
     override def handle(rs: WrappedResultSet): ForSpRecord = ForSpRecord(
-      float = rs.getFloat("FLOAT_VALUE"),
-      floatOpt = rs.getFloatOpt("FLOAT_OPT"),
+      float = rs.getScalaFloat("FLOAT_VALUE"),
+      floatOpt = rs.getScalaFloatOpt("FLOAT_OPT"),
       bigDecimal = rs.getBigDecimal("BIG_DECIMAL"),
       bigDecimalOpt = rs.getBigDecimalOpt("BIG_DECIMAL_OPT")
     )
