@@ -42,6 +42,23 @@ class JdbcRoutine {
     }
   }
 
+  /**
+   *
+   * @param returnedColumnNames an array of column names indicating the columns that should be returned from the inserted row or rows. Useful in Sequence-based auto key generation such as Oracle
+   * @return ( the return result of underlying [[java.sql.Statement#executeUpdate(String)]] , the generated keys)
+   */
+  @throws[SQLException]
+  def updateAndGetGeneratedKeysFromReturnedColumns[KEYS](sql: String, returnedColumnNames: Array[String], generatedKeysHandler: GeneratedKeysHandler[KEYS], params: Any*)(implicit conn: Connection): (Int, Option[KEYS]) = {
+    Using.resource(conn.prepareStatement(sql, returnedColumnNames)) { stmt =>
+      setParams(stmt, params)
+      val execResult = stmt.executeUpdate()
+      val resultSet = new WrappedResultSet(stmt.getGeneratedKeys)
+      val generatedKeys = generatedKeysHandler.handle(resultSet)
+      (execResult, generatedKeys)
+    }
+  }
+
+
   @throws[SQLException]
   def queryForSeq[T](sql: String, rowHandler: RowHandler[T], params: Any*)(implicit conn: Connection): Seq[T] = {
     withPreparedStatement(sql, params) { stmt =>
@@ -73,7 +90,7 @@ class JdbcRoutine {
    * Invoke a stored procedure/function and retrieve the result, as well as values in out parameters
    * NOTE: If your stored procedure/function returns multiple ResultSet, only the first ResultSset is handled
    *
-   * @param rowHandler Note: only for this first ResultSet returned
+   * @param rowHandler Note: only for the first ResultSet returned
    */
   @throws[SQLException]
   def callForSeq[T](sql: String, rowHandler: RowHandler[T], params: CallableStatementParam*)(implicit conn: Connection): CallForDataResult[T] = {
@@ -81,11 +98,17 @@ class JdbcRoutine {
       setParamsForCall(params, stmt)
 
       val hasResultSet = stmt.execute()
+
       val records = if (hasResultSet) {
         resultSetToRecords(stmt.getResultSet(), rowHandler)
       } else {
-        Seq()
+        if (stmt.getMoreResults) { //When there are result sets, some jdbc drivers (e.g. Oracle) return false for `stmt.execute()` but true for `getMoreResults()`
+          resultSetToRecords(stmt.getResultSet(), rowHandler)
+        } else {
+          Seq()
+        }
       }
+
       val outValues = getOutValuesAfterCall(stmt, params)
 
       CallForDataResult(records, outValues)
@@ -93,7 +116,7 @@ class JdbcRoutine {
   }
 
   /**
-   * Invoke a stored procedure/function and retrieve the update count, as well as values in out parameters
+   * Invoke a stored procedure/function, as well as values in out parameters
    */
   @throws[SQLException]
   def callToUpdate(sql: String, params: CallableStatementParam*)(implicit conn: Connection): CallToUpdateResult = {
@@ -135,7 +158,7 @@ class JdbcRoutine {
         case OutParam(sqlType) => stmt.registerOutParameter(paramIndex + 1, sqlType)
         case InOutParam(sqlType, value) =>
           stmt.registerOutParameter(paramIndex + 1, sqlType)
-          stmt.setObject(paramIndex + 1, toJavaJdbcValue(value))
+          stmt.setObject(paramIndex + 1, toJavaJdbcValue(value), sqlType)
       }
     }
   }

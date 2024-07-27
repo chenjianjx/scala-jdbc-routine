@@ -9,13 +9,17 @@ abstract class MiscITCase extends VendorITCaseBase {
 
   protected def nameOfTableWithAutoKey: String
 
-  protected def ddlOfTableWithAutoKey: String
+  protected def ddlOfTableWithAutoKey: Seq[String]
+
+  protected def insertIntoTableWithAutoKey: String
+
+  protected def returnedColumnsToGetKey: Option[Array[String]] = None
 
   protected def generatedKeysHandler: GeneratedKeysHandler[Long] // Use a generic type instead of Long, if needed
 
   override protected def perClassInit(): Unit = {
     withConn { conn =>
-      testJdbc.execute(conn, ddlOfTableWithAutoKey)
+      ddlOfTableWithAutoKey.foreach(testJdbc.execute(conn, _))
       ()
     }
   }
@@ -43,7 +47,11 @@ abstract class MiscITCase extends VendorITCaseBase {
 
     withConn { implicit conn =>
 
-      val (affectedRows, keys) = jdbcRoutine.updateAndGetGeneratedKeys[Long](s"insert into $nameOfTableWithAutoKey(int_value) values(?)", generatedKeysHandler, 123)
+      val (affectedRows, keys) = if (returnedColumnsToGetKey.isDefined) {
+        jdbcRoutine.updateAndGetGeneratedKeysFromReturnedColumns[Long](insertIntoTableWithAutoKey, returnedColumnsToGetKey.get, generatedKeysHandler, 123)
+      } else {
+        jdbcRoutine.updateAndGetGeneratedKeys[Long](insertIntoTableWithAutoKey, generatedKeysHandler, 123)
+      }
 
       assertEquals(1, affectedRows)
       assertEquals(Some(1L), keys)
@@ -51,12 +59,15 @@ abstract class MiscITCase extends VendorITCaseBase {
   }
 
 
-
   @Test
   def updateAndGetGeneratedKeys_noGeneration(): Unit = {
     withConn { implicit conn =>
-
-      val (affectedRows, keys) = jdbcRoutine.updateAndGetGeneratedKeys[Long](s"UPDATE $nameOfTableWithAutoKey SET int_value = 999 where id = ? ", generatedKeysHandler, -1)
+      val sql = s"UPDATE $nameOfTableWithAutoKey SET int_value = 999 where id = ? "
+      val (affectedRows, keys) = if (returnedColumnsToGetKey.isDefined) {
+        jdbcRoutine.updateAndGetGeneratedKeysFromReturnedColumns[Long](sql, returnedColumnsToGetKey.get, generatedKeysHandler, -1)
+      } else {
+        jdbcRoutine.updateAndGetGeneratedKeys[Long](sql, generatedKeysHandler, -1)
+      }
 
       assertEquals(0, affectedRows)
       assertEquals(None, keys)

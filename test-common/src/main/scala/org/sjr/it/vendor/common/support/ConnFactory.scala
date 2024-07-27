@@ -13,9 +13,15 @@ trait ConnFactory {
 }
 
 class TestContainerConnFactory(container: JdbcDatabaseContainer[_]) extends ConnFactory {
-  override def getConn(): Connection = DriverManager.getConnection(container.getJdbcUrl, container.getUsername, container.getPassword)
+
+  override def getConn(): Connection = {
+    DriverManager.getConnection(container.getJdbcUrl, container.getUsername, container.getPassword)
+  }
 
   override def stop(): Unit = container.close()
 
-  override def start(): Unit = container.start()
+  override def start(): Unit = {
+    container.start()
+    println(s"jdbcUrl = ${container.getJdbcUrl}, username = ${container.getUsername}, password = ${container.getPassword}")
+  }
 }
