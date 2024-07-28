@@ -33,11 +33,9 @@ class SqlServerCallableStatementITCase extends CallableStatementITCase {
       |    @float_twice_out_opt REAL OUT
       |AS
       |BEGIN
-      |    -- Insert values into the table
       |    INSERT INTO for_sp (float_value, float_opt, big_decimal, big_decimal_opt)
       |    VALUES (@float_in, @float_in_opt, @big_decimal_twice_inout, @big_decimal_twice_inout_opt);
       |
-      |    -- Modify the IN OUT and OUT parameters
       |    SET @big_decimal_twice_inout = @big_decimal_twice_inout * 2;
       |    SET @big_decimal_twice_inout_opt = CASE
       |                                          WHEN @big_decimal_twice_inout_opt IS NULL THEN NULL
@@ -58,10 +56,8 @@ class SqlServerCallableStatementITCase extends CallableStatementITCase {
        |CREATE PROCEDURE query_sp
        |AS
        |BEGIN
-       |    -- Returning all rows from the table
        |    SELECT * FROM for_sp;
        |
-       |    -- Returning the count of rows in the table
        |    SELECT COUNT(*) AS row_count FROM for_sp;
        |END
        |

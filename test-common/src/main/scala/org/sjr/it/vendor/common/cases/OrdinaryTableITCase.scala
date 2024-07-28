@@ -7,7 +7,7 @@ import org.sjr.RowHandler
 import org.sjr.TransactionRoutine.transaction
 import org.sjr.it.vendor.common.support.{testJdbc, withConn}
 
-import java.sql.{SQLException, SQLNonTransientException}
+import java.sql.{Connection, SQLException, SQLNonTransientException}
 import java.util
 import scala.jdk.CollectionConverters.CollectionHasAsScala
 
@@ -25,7 +25,7 @@ abstract class OrdinaryTableITCase[T <: AllTypesRecord[T]] extends VendorITCaseB
 
   protected def tableName: String
 
-  protected def ddlForTable: String
+  protected def ddlsForTable: Seq[String]
 
   protected def insertSql: String
 
@@ -35,7 +35,7 @@ abstract class OrdinaryTableITCase[T <: AllTypesRecord[T]] extends VendorITCaseB
 
   protected def stringOptColumnName: String
 
-  protected def recordToParams(record: T): Seq[Any]
+  protected def recordToParams(record: T)(implicit conn: Connection): Seq[Any]
 
   protected def getRowHandler: RowHandler[T]
 
@@ -50,7 +50,7 @@ abstract class OrdinaryTableITCase[T <: AllTypesRecord[T]] extends VendorITCaseB
 
   override protected def perClassInit(): Unit = {
     withConn { conn =>
-      testJdbc.execute(conn, ddlForTable)
+      ddlsForTable.foreach(testJdbc.execute(conn, _))
       ()
     }
   }
@@ -65,9 +65,9 @@ abstract class OrdinaryTableITCase[T <: AllTypesRecord[T]] extends VendorITCaseB
 
   @Test
   def insert(): Unit = {
-    withConn { conn =>
-      assertEquals(1, jdbcRoutine.update(insertSql, recordToParams(recordWithTotalFields): _*)(conn))
-      assertEquals(1, jdbcRoutine.update(insertSql, recordToParams(recordWithRequiredFields): _*)(conn))
+    withConn { implicit conn =>
+      assertEquals(1, jdbcRoutine.update(insertSql, recordToParams(recordWithTotalFields): _*))
+      assertEquals(1, jdbcRoutine.update(insertSql, recordToParams(recordWithRequiredFields): _*))
       val recordsInDb = testJdbc.query(conn, s"select * from $tableName order by $idColumnName", new MapListHandler()).asScala.toSeq
       assertEquals(2, recordsInDb.size)
       assertDataInDb(recordWithTotalFields, recordsInDb(0))
