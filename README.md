@@ -4,17 +4,19 @@
 
 It's similar to [Spring JdbcTemplate](https://spring.io/guides/gs/relational-data-access) or [commons-dbutils](https://commons.apache.org/proper/commons-dbutils/examples.html), but offers a Scala-friendly API.     
 
-For example, you can work with `Option` instead of with `null` . 
+For example, it can work with `Option`. 
 
 ```scala
-val records = jdbcRoutine.queryForSeq("select * from users", new RowHandler[User] {
+val records = jdbcRoutine.queryForSeq("select * from users where id = ?", new RowHandler[User] {
     override def handle(resultSet: WrappedResultSet): User = {
       User(
         id = resultSet.getScalaLong("id"),
         optioalName = resultSet.getStringOpt("name") // Option instead of null
       )
     }
-})
+},
+  Some(1) //Option parameter handled automatically
+)
 ```
 
 ## Features
@@ -27,12 +29,12 @@ val records = jdbcRoutine.queryForSeq("select * from users", new RowHandler[User
 
 For `scala2.13`
 ```scala 
-libraryDependencies += "com.github.chenjianjx.sjr" %% "scala-jdbc-routine" % "0.9.1"
+"com.github.chenjianjx.sjr" %% "scala-jdbc-routine" % "0.9.1"
 ```
 
 For `scala3`
 ```scala
-libraryDependencies += "com.github.chenjianjx.sjr" % "scala-jdbc-routine" % "0.9.1" cross CrossVersion.for3Use2_13
+"com.github.chenjianjx.sjr" % "scala-jdbc-routine" % "0.9.1" cross CrossVersion.for3Use2_13
 ```
 
 ```scala
