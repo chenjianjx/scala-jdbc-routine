@@ -7,14 +7,16 @@ It's similar to [Spring JdbcTemplate](https://spring.io/guides/gs/relational-dat
 For example, it can work with `Option`. 
 
 ```scala
-val records = jdbcRoutine.queryForSeq("select * from users where id = ?", new RowHandler[User] {
+val records = jdbcRoutine.queryForSeq(
+  "select * from users where id = ?",
+  new RowHandler[User] {
     override def handle(resultSet: WrappedResultSet): User = {
       User(
         id = resultSet.getScalaLong("id"),
         optioalName = resultSet.getStringOpt("name") // Option instead of null
       )
     }
-},
+  },
   Some(1) //Option parameter handled automatically
 )
 ```
