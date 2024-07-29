@@ -13,11 +13,11 @@ val records = jdbcRoutine.queryForSeq(
     override def handle(resultSet: WrappedResultSet): User = {
       User(
         id = resultSet.getScalaLong("id"),
-        optioalName = resultSet.getStringOpt("name") // Option instead of null
+        optioalName = resultSet.getStringOpt("name") // Option[] instead of null
       )
     }
-  },
-  Some(1) //Option parameter handled automatically
+   },
+  Some(1) //parameters of Option[] are handled
 )
 ```
 
