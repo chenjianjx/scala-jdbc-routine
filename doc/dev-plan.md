@@ -26,9 +26,11 @@
 * Things to revise
     * Instead of stringAsXxxStream in the crud test case class, use File to simulate real life?  -- no thanks
     * blob/xml/etc for some databases -- done
-* Make it output libraries for multiple scala versions
+* Make it output libraries for multiple scala versions -- give up cross-build . Just use 2.13
 * Publish the snapshot version
-* Delete this file and publish the real version
+  * To sonatype -- done 
+* Publish the real version
+* Write readme and delete this file
 * Promotion
 
 ----

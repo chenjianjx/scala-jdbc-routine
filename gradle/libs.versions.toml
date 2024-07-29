@@ -1,6 +1,6 @@
 [versions]
 junit = "5.8.2"
-scala-library = "2.13.11"
+scala-library = "2.13.0"
 commons-dbutils = "1.8.1"
 testcontainers = "1.20.0"
 mysql-connector-java = "8.0.29"
