@@ -1,5 +1,5 @@
 dependencies {
-    api(project(":lib"))
+    api(project(":scala-jdbc-routine"))
 
     api libs.scala.reflect
     api libs.junit.api

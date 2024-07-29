@@ -3,10 +3,12 @@ plugins {
     id 'org.gradle.toolchains.foojay-resolver-convention' version '0.7.0'
 }
 
-rootProject.name = 'scala-jdbc-routine'
+rootProject.name = 'scala-jdbc-routine-parent'
 include "lib"
 include "test-common"
 include "vendor-test-mysql"
 include "vendor-test-postgresql"
 include "vendor-test-oracle"
 include "vendor-test-sqlserver"
+
+project(':lib').name = 'scala-jdbc-routine'

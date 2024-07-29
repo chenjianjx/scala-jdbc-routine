@@ -9,3 +9,4 @@ hs_err_pid*
 
 # Ignore Gradle build output directory
 build
+/gradle.properties

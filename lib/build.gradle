@@ -1,2 +1,61 @@
-dependencies {
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+publishing {
+    publications {
+        mavenScala(MavenPublication) {
+            artifactId = "${project.name}_2.13"
+            from components.java
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name = "Scala Jdbc Routine Library"
+                description = "Helper classes that make JDBC programming easier in Scala"
+                url = "https://github.com/chenjianjx/scala-jdbc-routine"
+
+                scm {
+                    connection = "scm:git:git://github.com/chenjianjx/scala-jdbc-routine.git"
+                    developerConnection = "scm:git:ssh://github.com:chenjianjx/scala-jdbc-routine.git"
+                    url = "https://github.com/chenjianjx/scala-jdbc-routine/"
+                }
+
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+
+                developers {
+                    developer {
+                        id = 'chenjianjx'
+                        name = 'Jian Chen'
+                        email = 'chenjianjx@gmail.com'
+                    }
+                }
+            }
+
+        }
+    }
+    repositories {
+        maven {
+            def releasesRepoUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+            def snapshotsRepoUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
+            credentials {
+                username = findProperty("ossrhToken") as String
+                password = findProperty("ossrhTokenPassword") as String
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenScala
 }

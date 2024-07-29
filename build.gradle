@@ -9,9 +9,14 @@ buildscript {
     }
 }
 
+
+
 subprojects {
     apply plugin: 'scala'
     apply plugin: 'java-library'
+
+    group = 'com.github.chenjianjx.sjr'
+    version = '0.9.0-SNAPSHOT'
 
     dependencies {
         implementation libs.scala.library
@@ -25,11 +30,13 @@ subprojects {
         toolchain {
             languageVersion = JavaLanguageVersion.of(8)
         }
+        withJavadocJar()
+        withSourcesJar()
     }
 
     tasks.withType(ScalaCompile) {
         scalaCompileOptions.additionalParameters = [
-                "-Xfatal-warnings", // Fail the compilation if there are any warnings.
+                "-Xfatal-warnings",
                 "-deprecation", // Emit warning and location for usages of deprecated APIs.
                 "-explaintypes", // Explain type errors in more detail.
                 "-feature", // Emit warning and location for usages of features that should be imported explicitly.
@@ -69,7 +76,7 @@ subprojects {
         ]
     }
 
-    if(project.name.startsWith("vendor-test-")){
+    if (project.name.startsWith("vendor-test-")) {
 
         dependencies {
 
@@ -82,7 +89,7 @@ subprojects {
 
         //See https://github.com/scoverage/gradle-scoverage/issues/201#issuecomment-1773306952
         sourceSets.main.scala.srcDir(
-                project(":lib").sourceSets.main.scala.srcDirs
+                project(":scala-jdbc-routine").sourceSets.main.scala.srcDirs
         )
         apply plugin: 'org.scoverage'
 
