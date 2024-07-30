@@ -168,6 +168,9 @@ transaction {
 
 See function [transaction](lib/src/main/scala/org/sjr/TransactionRoutine.scala)
 
+Note: You can use this function without `JdbcRoutine`. You can also use `JdbcRoutine` without this function.
+ 
+
 ## Scala-friendly ResultSet without JdbcRoutine
 
 ```scala
