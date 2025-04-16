@@ -183,3 +183,12 @@ while (resultSet.next()) {
 ```
 
 See class [WrappedResultSet](lib/src/main/scala/org/sjr/WrappedResultSet.scala)
+
+
+# Development
+
+## Set up development environment 
+
+* Copy `gradle.properties.template` as `gradle.properties` 
+* Change values in `gradle.properties`
+* Import the project to your IDE as a gradle project 
